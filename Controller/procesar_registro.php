@@ -1,37 +1,45 @@
 <?php
-require_once '../Config/conexion.php';
-require_once '../Model/Usuario.php';
 
-$nombre   = $_POST['usuario']  ?? '';
-$password = $_POST['password'] ?? '';
-$password2 = $_POST['password_confirmacion'] ?? '';
-$roles     = $_POST['rol']     ?? [];
+function procesarRegistro(
+    array $post,
+    Usuario $modeloUsuario
+): string {
 
-// Validar que los campos no estén vacíos
-if (empty($nombre) || empty($password) || empty($password2)) {
-    header('Location: ../view/login.php?error=campos_vacios');
+    $nombre    = $post['usuario']               ?? '';
+    $password  = $post['password']              ?? '';
+    $password2 = $post['password_confirmacion'] ?? '';
+    $roles     = $post['rol']                   ?? [];
+
+    if (empty($nombre) || empty($password) || empty($password2)) {
+        return 'redirect:../view/login.php?error=campos_vacios';
+    }
+
+    if ($password !== $password2) {
+        return 'redirect:../view/login.php?error=passwords_no_coinciden';
+    }
+
+    if (empty($roles)) {
+        return 'redirect:../view/login.php?error=sin_rol';
+    }
+
+    $resultado = $modeloUsuario->registrar($nombre, $password, $roles);
+
+    if ($resultado) {
+        return 'redirect:../view/login.php?exito=registro_ok';
+    } else {
+        return 'redirect:../view/login.php?error=usuario_existente';
+    }
+}
+
+
+if (!defined('TESTING')) {
+    require_once '../Config/conexion.php';
+    require_once '../Model/Usuario.php';
+
+    $destino = procesarRegistro($_POST, new Usuario($conn));
+
+    header('Location: ' . str_replace('redirect:', '', $destino));
     exit();
 }
 
-// Validar que las contraseñas coincidan
-if ($password !== $password2) {
-    header('Location: ../view/login.php?error=passwords_no_coinciden');
-    exit();
-}
-
-// Validar que se seleccionó al menos un rol
-if (empty($roles)) {
-    header('Location: ../view/login.php?error=sin_rol');
-    exit();
-}
-
-$usuario = new Usuario($conn);
-$resultado = $usuario->registrar($nombre, $password, $roles);
-
-if ($resultado) {
-    header('Location: ../view/login.php?exito=registro_ok');
-} else {
-    header('Location: ../view/login.php?error=usuario_existente');
-}
-
-exit();
+?>

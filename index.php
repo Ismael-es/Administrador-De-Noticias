@@ -50,7 +50,7 @@ $badges = [
         <ul class="navbar-nav ms-auto gap-2">
           <li class="nav-item"><a class="nav-link active" href="#">Inicio</a></li>
           <?php if (in_array(3, $_SESSION['roles'])) : ?>
-            <li class="nav-item"><a class="nav-link" href="parametros.php">Parámetros</a></li>
+            <li class="nav-item"><a class="nav-link" href="view/parametros.php">Parámetros</a></li>
           <?php endif; ?>
           <li class="nav-item"><a class="nav-link" href="Controller/procesar_logout.php">Cerrar sesión</a></li>
         </ul>

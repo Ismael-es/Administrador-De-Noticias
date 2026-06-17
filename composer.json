@@ -1,0 +1,12 @@
+{
+     "autoload": {
+        "classmap": [
+            "Controller/",
+            "Model/",
+            "Config/"
+        ]
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5"
+    }
+}

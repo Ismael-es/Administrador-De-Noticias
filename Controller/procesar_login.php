@@ -1,27 +1,48 @@
 <?php
-session_start();
 
-require_once '../Config/conexion.php';
-require_once '../Model/Usuario.php';
+function procesarLogin(
+    array $post,
+    Usuario $modeloUsuario
+): array {
 
-$nombre   = $_POST['usuario']  ?? '';
-$password = $_POST['password'] ?? '';
+    $nombre   = $post['usuario']  ?? '';
+    $password = $post['password'] ?? '';
 
-if (empty($nombre) || empty($password)) {
-    header('Location: ../View/login.php?error=campos_vacios');
+    if (empty($nombre) || empty($password)) {
+        return ['redirect' => '../View/login.php?error=campos_vacios', 'session' => []];
+    }
+
+    $resultado = $modeloUsuario->login($nombre, $password);
+
+    if ($resultado) {
+        $roles = $modeloUsuario->obtenerRoles($resultado['id_usuario']);
+        return [
+            'redirect' => '../index.php',
+            'session'  => [
+                'id'     => $resultado['id_usuario'],
+                'nombre' => $resultado['nombre_usuario'],
+                'roles'  => $roles
+            ]
+        ];
+    } else {
+        return ['redirect' => '../View/login.php?error=credenciales_invalidas', 'session' => []];
+    }
+}
+
+
+if (!defined('TESTING')) {
+    session_start();
+    require_once '../Config/conexion.php';
+    require_once '../Model/Usuario.php';
+
+    $respuesta = procesarLogin($_POST, new Usuario($conn));
+
+    foreach ($respuesta['session'] as $clave => $valor) {
+        $_SESSION[$clave] = $valor;
+    }
+
+    header('Location: ' . $respuesta['redirect']);
     exit();
 }
 
-$usuario   = new Usuario($conn);
-$resultado = $usuario->login($nombre, $password);
-
-if ($resultado) {
-    $_SESSION['id']    = $resultado['id_usuario'];
-    $_SESSION['nombre'] = $resultado['nombre_usuario'];
-    $_SESSION['roles'] = $usuario->obtenerRoles($resultado['id_usuario']);
-    header('Location: ../index.php');
-} else {
-    header('Location: ../View/login.php?error=credenciales_invalidas');
-}
-
-exit();
+?>
